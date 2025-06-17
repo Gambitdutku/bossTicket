@@ -1,0 +1,12 @@
+<h2>Ticket: {{ subject }}</h2>
+<hr>
+{% for e in entries %}
+  <p><strong>{{ e.poster }}:</strong> {{ e.body }}<br><small>{{ e.created }}</small></p>
+  <hr>
+{% endfor %}
+<h3>Send Response</h3>
+<form method="post">{% csrf_token %}
+  <textarea name="message" rows="5" cols="50"></textarea><br>
+  <button type="submit">Send</button>
+</form>
+<a href="{% url 'admin_update_status' ticket.ticket_id %}">Update Status</a>

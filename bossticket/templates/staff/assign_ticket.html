@@ -1,0 +1,11 @@
+<h2>Assign Ticket #{{ ticket.ticket_id }}</h2>
+<form method="post">
+  {% csrf_token %}
+  <label>Assign to:</label>
+  <select name="staff_id">
+    {% for s in staff_list %}
+      <option value="{{ s.staff_id }}" {% if s.staff_id == ticket.staff_id %}selected{% endif %}>{{ s.username }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit">Assign</button>
+</form>

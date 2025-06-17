@@ -1,0 +1,9 @@
+<h2>Update Status for Ticket #{{ ticket.ticket_id }}</h2>
+<form method="post">{% csrf_token %}
+  <select name="status_id">
+    {% for s in statuses %}
+      <option value="{{ s.id }}" {% if s.id == ticket.status_id %}selected{% endif %}>{{ s.name }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit">Update</button>
+</form>

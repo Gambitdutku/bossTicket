@@ -1,0 +1,10 @@
+<h2>All Tickets</h2>
+<ul>
+  {% for item in ticket_data %}
+    <li>
+      <a href="{% url 'admin_ticket_detail' item.ticket.ticket_id %}">
+        {{ item.subject }} - {{ item.ticket.created }}
+      </a>
+    </li>
+  {% endfor %}
+</ul>
