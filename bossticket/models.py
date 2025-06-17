@@ -1,184 +1,143 @@
+# This is an auto-generated Django model module.
+# You'll have to do the following manually to clean this up:
+#   * Rearrange models' order
+#   * Make sure each model has one field with primary_key=True
+#   * Make sure each ForeignKey and OneToOneField has `on_delete` set to the desired behavior
+#   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
+# Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
 
-class TicketPriority(models.Model):
-    priority_id = models.SmallIntegerField(primary_key=True)
-    priority = models.CharField(max_length=60)
-    priority_desc = models.CharField(max_length=30)
-    priority_color = models.CharField(max_length=7)
-    priority_urgency = models.PositiveSmallIntegerField(default=0)
-    ispublic = models.BooleanField(default=True)
 
-    class Meta:
-        managed = False
-        db_table = 'ost_ticket_priority'
-
-class TicketStatus(models.Model):
-    id = models.IntegerField(primary_key=True)
-    name = models.CharField(max_length=60)
-    state = models.CharField(max_length=16, null=True, blank=True)
-    mode = models.PositiveIntegerField(default=0)
-    flags = models.PositiveIntegerField(default=0)
-    sort = models.PositiveIntegerField(default=0)
-    properties = models.TextField()
-    created = models.DateTimeField()
-    updated = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_ticket_status'
-
-class Ticket(models.Model):
-    ticket_id = models.AutoField(primary_key=True)
-    ticket_pid = models.PositiveIntegerField(null=True, blank=True)
-    number = models.CharField(max_length=20, null=True, blank=True)
-    user = models.ForeignKey('User', models.CASCADE, db_column='user_id')
-    user_email = models.ForeignKey('UserEmail', models.CASCADE, db_column='user_email_id')
-    status = models.ForeignKey(TicketStatus, models.CASCADE, db_column='status_id')
-    dept = models.ForeignKey('Department', models.CASCADE, db_column='dept_id')
-    sla = models.ForeignKey('Sla', models.CASCADE, db_column='sla_id')
-    topic = models.ForeignKey('HelpTopic', models.CASCADE, db_column='topic_id')
-    staff = models.ForeignKey('Staff', models.CASCADE, db_column='staff_id')
-    team = models.ForeignKey('Team', models.CASCADE, db_column='team_id')
-    email = models.ForeignKey('Email', models.CASCADE, db_column='email_id')
-    lock = models.ForeignKey('Lock', models.CASCADE, db_column='lock_id')
-    flags = models.PositiveIntegerField(default=0)
-    sort = models.PositiveIntegerField(default=0)
-    ip_address = models.CharField(max_length=64, default='')
-    source = models.CharField(max_length=5, choices=[('Web','Web'),('Email','Email'),('Phone','Phone'),('API','API'),('Other','Other')], default='Other')
-    source_extra = models.CharField(max_length=40, null=True, blank=True)
-    isoverdue = models.BooleanField(default=False)
-    isanswered = models.BooleanField(default=False)
-    duedate = models.DateTimeField(null=True, blank=True)
-    est_duedate = models.DateTimeField(null=True, blank=True)
-    reopened = models.DateTimeField(null=True, blank=True)
-    closed = models.DateTimeField(null=True, blank=True)
-    lastupdate = models.DateTimeField(null=True, blank=True)
-    created = models.DateTimeField()
-    updated = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_ticket'
-
-class TicketCData(models.Model):
-    ticket = models.OneToOneField(Ticket, models.CASCADE, primary_key=True, db_column='ticket_id')
-    subject = models.TextField(null=True, blank=True)
-    priority = models.TextField(null=True, blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'ost_ticket__cdata'
-
-class Thread(models.Model):
-    id = models.AutoField(primary_key=True)
+class Search(models.Model):
+    object_type = models.CharField(primary_key=True, max_length=8)  # The composite primary key (object_type, object_id) found, that is not supported. The first column is selected.
     object_id = models.PositiveIntegerField()
-    object_type = models.CharField(max_length=1)
-    extra = models.TextField(null=True, blank=True)
-    lastresponse = models.DateTimeField(null=True, blank=True)
-    lastmessage = models.DateTimeField(null=True, blank=True)
+    title = models.TextField(blank=True, null=True)
+    content = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ost__search'
+        unique_together = (('object_type', 'object_id'),)
+
+
+class ApiKey(models.Model):
+    isactive = models.IntegerField()
+    ipaddr = models.CharField(max_length=64)
+    apikey = models.CharField(unique=True, max_length=255)
+    can_create_tickets = models.PositiveIntegerField()
+    can_exec_cron = models.PositiveIntegerField()
+    notes = models.TextField(blank=True, null=True)
+    updated = models.DateTimeField()
     created = models.DateTimeField()
 
     class Meta:
         managed = False
-        db_table = 'ost_thread'
+        db_table = 'ost_api_key'
 
-class ThreadCollaborator(models.Model):
-    id = models.AutoField(primary_key=True)
-    flags = models.PositiveIntegerField(default=1)
-    thread = models.ForeignKey(Thread, models.CASCADE, db_column='thread_id')
-    user = models.ForeignKey('User', models.CASCADE, db_column='user_id')
-    role = models.CharField(max_length=1, default='M')
+
+class Attachment(models.Model):
+    object_id = models.PositiveIntegerField()
+    type = models.CharField(max_length=1)
+    file_id = models.PositiveIntegerField()
+    name = models.CharField(max_length=255, blank=True, null=True)
+    inline = models.PositiveIntegerField()
+    lang = models.CharField(max_length=16, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ost_attachment'
+        unique_together = (('file_id', 'object_id'), ('object_id', 'file_id', 'type'),)
+
+
+class CannedResponse(models.Model):
+    canned_id = models.AutoField(primary_key=True)
+    dept_id = models.PositiveIntegerField()
+    isenabled = models.PositiveIntegerField()
+    title = models.CharField(unique=True, max_length=255)
+    response = models.TextField()
+    lang = models.CharField(max_length=16)
+    notes = models.TextField(blank=True, null=True)
     created = models.DateTimeField()
     updated = models.DateTimeField()
 
     class Meta:
         managed = False
-        db_table = 'ost_thread_collaborator'
+        db_table = 'ost_canned_response'
 
-class ThreadEntry(models.Model):
-    id = models.AutoField(primary_key=True)
-    pid = models.PositiveIntegerField(default=0)
-    thread = models.ForeignKey(Thread, models.CASCADE, db_column='thread_id')
-    staff = models.ForeignKey('Staff', models.CASCADE, db_column='staff_id')
-    user = models.ForeignKey('User', models.CASCADE, db_column='user_id')
-    type = models.CharField(max_length=1, default='')
-    flags = models.PositiveIntegerField(default=0)
-    poster = models.CharField(max_length=128, default='')
-    editor = models.PositiveIntegerField(null=True, blank=True)
-    editor_type = models.CharField(max_length=1, null=True, blank=True)
-    source = models.CharField(max_length=32, default='')
-    title = models.CharField(max_length=255, null=True, blank=True)
+
+class Config(models.Model):
+    namespace = models.CharField(max_length=64)
+    key = models.CharField(max_length=64)
+    value = models.TextField()
+    updated = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_config'
+        unique_together = (('namespace', 'key'),)
+
+
+class Content(models.Model):
+    isactive = models.PositiveIntegerField()
+    type = models.CharField(max_length=32)
+    name = models.CharField(unique=True, max_length=255)
     body = models.TextField()
-    format = models.CharField(max_length=16, default='html')
-    ip_address = models.CharField(max_length=64, default='')
-    extra = models.TextField(null=True, blank=True)
-    recipients = models.TextField(null=True, blank=True)
+    notes = models.TextField(blank=True, null=True)
     created = models.DateTimeField()
     updated = models.DateTimeField()
 
     class Meta:
         managed = False
-        db_table = 'ost_thread_entry'
+        db_table = 'ost_content'
 
-class ThreadEntryEmail(models.Model):
-    id = models.AutoField(primary_key=True)
-    thread_entry = models.ForeignKey(ThreadEntry, models.CASCADE, db_column='thread_entry_id')
-    email = models.ForeignKey('Email', models.CASCADE, db_column='email_id', null=True)
-    mid = models.CharField(max_length=255)
-    headers = models.TextField(null=True, blank=True)
 
-    class Meta:
-        managed = False
-        db_table = 'ost_thread_entry_email'
-
-class ThreadEntryMerge(models.Model):
-    id = models.AutoField(primary_key=True)
-    thread_entry = models.ForeignKey(ThreadEntry, models.CASCADE, db_column='thread_entry_id')
-    data = models.TextField(null=True, blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'ost_thread_entry_merge'
-
-class ThreadEvent(models.Model):
-    id = models.AutoField(primary_key=True)
-    thread = models.ForeignKey(Thread, models.CASCADE, db_column='thread_id')
-    thread_type = models.CharField(max_length=1, default='')
-    event = models.ForeignKey('Event', models.CASCADE, db_column='event_id', null=True, blank=True)
-    staff = models.ForeignKey('Staff', models.CASCADE, db_column='staff_id')
-    team = models.ForeignKey('Team', models.CASCADE, db_column='team_id')
-    dept = models.ForeignKey('Department', models.CASCADE, db_column='dept_id')
-    topic = models.ForeignKey('HelpTopic', models.CASCADE, db_column='topic_id')
-    data = models.CharField(max_length=1024, null=True, blank=True)  # Encoded differences
-    username = models.CharField(max_length=128, default='SYSTEM')
-    uid = models.PositiveIntegerField(null=True, blank=True)
-    uid_type = models.CharField(max_length=1, default='S')
-    annulled = models.BooleanField(default=False)
-    timestamp = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_thread_event'
-
-class ThreadReferral(models.Model):
-    id = models.AutoField(primary_key=True)
-    thread = models.ForeignKey(Thread, models.CASCADE, db_column='thread_id')
-    object_id = models.PositiveIntegerField()
-    object_type = models.CharField(max_length=1)
+class Department(models.Model):
+    pid = models.PositiveIntegerField(blank=True, null=True)
+    tpl_id = models.PositiveIntegerField()
+    sla_id = models.PositiveIntegerField()
+    schedule_id = models.PositiveIntegerField()
+    email_id = models.PositiveIntegerField()
+    autoresp_email_id = models.PositiveIntegerField()
+    manager_id = models.PositiveIntegerField()
+    flags = models.PositiveIntegerField()
+    name = models.CharField(max_length=128)
+    signature = models.TextField()
+    ispublic = models.PositiveIntegerField()
+    group_membership = models.IntegerField()
+    ticket_auto_response = models.IntegerField()
+    message_auto_response = models.IntegerField()
+    path = models.CharField(max_length=128)
+    updated = models.DateTimeField()
     created = models.DateTimeField()
 
     class Meta:
         managed = False
-        db_table = 'ost_thread_referral'
+        db_table = 'ost_department'
+        unique_together = (('name', 'pid'),)
+
+
+class Draft(models.Model):
+    staff_id = models.PositiveIntegerField()
+    namespace = models.CharField(max_length=32)
+    body = models.TextField()
+    extra = models.TextField(blank=True, null=True)
+    created = models.DateTimeField()
+    updated = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ost_draft'
+
+
 class Email(models.Model):
     email_id = models.AutoField(primary_key=True)
-    noautoresp = models.BooleanField(default=False)
-    priority = models.ForeignKey(TicketPriority, models.CASCADE, db_column='priority_id')
-    dept = models.ForeignKey('Department', models.CASCADE, db_column='dept_id')
-    topic = models.ForeignKey('HelpTopic', models.CASCADE, db_column='topic_id')
-    email = models.CharField(max_length=255, default='')
-    name = models.CharField(max_length=255, default='')
-    notes = models.TextField(null=True, blank=True)
+    noautoresp = models.PositiveIntegerField()
+    priority_id = models.PositiveIntegerField()
+    dept_id = models.PositiveIntegerField()
+    topic_id = models.PositiveIntegerField()
+    email = models.CharField(unique=True, max_length=255)
+    name = models.CharField(max_length=255)
+    notes = models.TextField(blank=True, null=True)
     created = models.DateTimeField()
     updated = models.DateTimeField()
 
@@ -186,27 +145,27 @@ class Email(models.Model):
         managed = False
         db_table = 'ost_email'
 
+
 class EmailAccount(models.Model):
-    id = models.AutoField(primary_key=True)
-    email = models.ForeignKey(Email, models.CASCADE, db_column='email_id')
-    type = models.CharField(max_length=7, choices=[('mailbox','mailbox'),('smtp','smtp')], default='mailbox')
+    email_id = models.PositiveIntegerField()
+    type = models.CharField(max_length=7)
     auth_bk = models.CharField(max_length=128)
-    auth_id = models.CharField(max_length=16, null=True, blank=True)
-    active = models.BooleanField(default=False)
-    host = models.CharField(max_length=128, default='')
+    auth_id = models.CharField(max_length=16, blank=True, null=True)
+    active = models.PositiveIntegerField()
+    host = models.CharField(max_length=128)
     port = models.IntegerField()
-    folder = models.CharField(max_length=255, null=True, blank=True)
-    protocol = models.CharField(max_length=5, choices=[('IMAP','IMAP'),('POP','POP'),('SMTP','SMTP'),('OTHER','OTHER')], default='OTHER')
-    encryption = models.CharField(max_length=4, choices=[('NONE','NONE'),('AUTO','AUTO'),('SSL','SSL')], default='AUTO')
-    fetchfreq = models.PositiveSmallIntegerField(default=5)
-    fetchmax = models.PositiveSmallIntegerField(default=30)
-    postfetch = models.CharField(max_length=7, choices=[('archive','archive'),('delete','delete'),('nothing','nothing')], default='nothing')
-    archivefolder = models.CharField(max_length=255, null=True, blank=True)
-    allow_spoofing = models.BooleanField(default=False)
-    num_errors = models.PositiveIntegerField(default=0)
-    last_error_msg = models.TextField(null=True, blank=True)
-    last_error = models.DateTimeField(null=True, blank=True)
-    last_activity = models.DateTimeField(null=True, blank=True)
+    folder = models.CharField(max_length=255, blank=True, null=True)
+    protocol = models.CharField(max_length=5)
+    encryption = models.CharField(max_length=4)
+    fetchfreq = models.PositiveIntegerField()
+    fetchmax = models.PositiveIntegerField(blank=True, null=True)
+    postfetch = models.CharField(max_length=7)
+    archivefolder = models.CharField(max_length=255, blank=True, null=True)
+    allow_spoofing = models.PositiveIntegerField(blank=True, null=True)
+    num_errors = models.PositiveIntegerField()
+    last_error_msg = models.TextField(blank=True, null=True)
+    last_error = models.DateTimeField(blank=True, null=True)
+    last_activity = models.DateTimeField(blank=True, null=True)
     created = models.DateTimeField()
     updated = models.DateTimeField()
 
@@ -214,181 +173,53 @@ class EmailAccount(models.Model):
         managed = False
         db_table = 'ost_email_account'
 
+
 class EmailTemplate(models.Model):
-    id = models.AutoField(primary_key=True)
     tpl_id = models.PositiveIntegerField()
     code_name = models.CharField(max_length=32)
-    subject = models.CharField(max_length=255, default='')
+    subject = models.CharField(max_length=255)
     body = models.TextField()
-    notes = models.TextField(null=True, blank=True)
+    notes = models.TextField(blank=True, null=True)
     created = models.DateTimeField()
     updated = models.DateTimeField()
 
     class Meta:
         managed = False
         db_table = 'ost_email_template'
+        unique_together = (('tpl_id', 'code_name'),)
+
 
 class EmailTemplateGroup(models.Model):
     tpl_id = models.AutoField(primary_key=True)
-    isactive = models.BooleanField(default=False)
-    name = models.CharField(max_length=32, default='')
-    lang = models.CharField(max_length=16, default='en_US')
-    notes = models.TextField(null=True, blank=True)
+    isactive = models.PositiveIntegerField()
+    name = models.CharField(max_length=32)
+    lang = models.CharField(max_length=16)
+    notes = models.TextField(blank=True, null=True)
     created = models.DateTimeField()
     updated = models.DateTimeField()
 
     class Meta:
         managed = False
         db_table = 'ost_email_template_group'
-class Filter(models.Model):
-    id = models.AutoField(primary_key=True)
-    execorder = models.PositiveIntegerField(default=99)
-    isactive = models.BooleanField(default=True)
-    flags = models.PositiveIntegerField(default=0)
-    status = models.PositiveIntegerField(default=0)
-    match_all_rules = models.BooleanField(default=False)
-    stop_onmatch = models.BooleanField(default=False)
-    target = models.CharField(max_length=5, choices=[('Any','Any'),('Web','Web'),('Email','Email'),('API','API')], default='Any')
-    email = models.ForeignKey(Email, models.CASCADE, db_column='email_id')
-    name = models.CharField(max_length=32, default='')
-    notes = models.TextField(null=True, blank=True)
-    created = models.DateTimeField()
-    updated = models.DateTimeField()
+
+
+class Event(models.Model):
+    name = models.CharField(unique=True, max_length=60)
+    description = models.CharField(max_length=60, blank=True, null=True)
 
     class Meta:
         managed = False
-        db_table = 'ost_filter'
+        db_table = 'ost_event'
 
-class FilterAction(models.Model):
-    id = models.AutoField(primary_key=True)
-    filter = models.ForeignKey(Filter, models.CASCADE, db_column='filter_id')
-    sort = models.PositiveIntegerField(default=0)
-    type = models.CharField(max_length=24)
-    configuration = models.TextField(null=True, blank=True)
-    updated = models.DateTimeField()
 
-    class Meta:
-        managed = False
-        db_table = 'ost_filter_action'
-
-class FilterRule(models.Model):
-    id = models.AutoField(primary_key=True)
-    filter = models.ForeignKey(Filter, models.CASCADE, db_column='filter_id')
-    what = models.CharField(max_length=32)
-    how = models.CharField(max_length=10, choices=[
-        ('equal','equal'),('not_equal','not_equal'),('contains','contains'),
-        ('dn_contain','dn_contain'),('starts','starts'),('ends','ends'),
-        ('match','match'),('not_match','not_match')
-    ])
-    val = models.CharField(max_length=255)
-    isactive = models.BooleanField(default=True)
-    notes = models.TextField(null=True, blank=True)
-    created = models.DateTimeField()
-    updated = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_filter_rule'
-class Form(models.Model):
-    id = models.AutoField(primary_key=True)
-    pid = models.PositiveIntegerField(null=True, blank=True)
-    type = models.CharField(max_length=8, default='G')
-    flags = models.PositiveIntegerField(default=1)
-    title = models.CharField(max_length=255)
-    instructions = models.CharField(max_length=512, null=True, blank=True)
-    name = models.CharField(max_length=64, default='')
-    notes = models.TextField(null=True, blank=True)
-    created = models.DateTimeField()
-    updated = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_form'
-
-class FormEntry(models.Model):
-    id = models.AutoField(primary_key=True)
-    form = models.ForeignKey(Form, models.CASCADE, db_column='form_id')
-    object_id = models.PositiveIntegerField(null=True, blank=True)
-    object_type = models.CharField(max_length=1, default='T')
-    sort = models.PositiveIntegerField(default=1)
-    extra = models.TextField(null=True, blank=True)
-    created = models.DateTimeField()
-    updated = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_form_entry'
-
-class FormEntryValues(models.Model):
-    entry = models.ForeignKey(FormEntry, models.CASCADE, db_column='entry_id')
-    field = models.ForeignKey('FormField', models.CASCADE, db_column='field_id')
-    value = models.TextField(null=True, blank=True)
-    value_id = models.IntegerField(null=True, blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'ost_form_entry_values'
-
-class FormField(models.Model):
-    id = models.AutoField(primary_key=True)
-    form = models.ForeignKey(Form, models.CASCADE, db_column='form_id')
-    flags = models.PositiveIntegerField(default=1)
-    type = models.CharField(max_length=255, default='text')
-    label = models.CharField(max_length=255)
-    name = models.CharField(max_length=64)
-    configuration = models.TextField(null=True, blank=True)
-    sort = models.PositiveIntegerField()
-    hint = models.CharField(max_length=512, null=True, blank=True)
-    created = models.DateTimeField()
-    updated = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_form_field'
-
-class HelpTopic(models.Model):
-    topic_id = models.AutoField(primary_key=True)
-    topic_pid = models.PositiveIntegerField(default=0)
-    ispublic = models.BooleanField(default=True)
-    noautoresp = models.BooleanField(default=False)
-    flags = models.PositiveIntegerField(default=0)
-    status = models.ForeignKey(TicketStatus, models.CASCADE, db_column='status_id')
-    priority = models.ForeignKey(TicketPriority, models.CASCADE, db_column='priority_id')
-    dept = models.ForeignKey('Department', models.CASCADE, db_column='dept_id')
-    staff = models.ForeignKey('Staff', models.CASCADE, db_column='staff_id')
-    team = models.ForeignKey('Team', models.CASCADE, db_column='team_id')
-    sla = models.ForeignKey('Sla', models.CASCADE, db_column='sla_id')
-    page_id = models.PositiveIntegerField(default=0)
-    sequence_id = models.PositiveIntegerField(default=0)
-    sort = models.PositiveIntegerField(default=0)
-    topic = models.CharField(max_length=128, default='')
-    number_format = models.CharField(max_length=32, null=True, blank=True)
-    notes = models.TextField(null=True, blank=True)
-    created = models.DateTimeField()
-    updated = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_help_topic'
-
-class HelpTopicForm(models.Model):
-    id = models.AutoField(primary_key=True)
-    topic = models.ForeignKey(HelpTopic, models.CASCADE, db_column='topic_id')
-    form = models.ForeignKey(Form, models.CASCADE, db_column='form_id')
-    sort = models.PositiveIntegerField(default=1)
-    extra = models.TextField(null=True, blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'ost_help_topic_form'
-class FAQ(models.Model):
+class Faq(models.Model):
     faq_id = models.AutoField(primary_key=True)
-    category = models.ForeignKey('FAQCategory', models.CASCADE, db_column='category_id')
-    ispublished = models.BooleanField(default=False)
-    question = models.CharField(max_length=255)
+    category_id = models.PositiveIntegerField()
+    ispublished = models.PositiveIntegerField()
+    question = models.CharField(unique=True, max_length=255)
     answer = models.TextField()
-    keywords = models.TextField(null=True, blank=True)
-    notes = models.TextField(null=True, blank=True)
+    keywords = models.TextField(blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
     created = models.DateTimeField()
     updated = models.DateTimeField()
 
@@ -396,11 +227,12 @@ class FAQ(models.Model):
         managed = False
         db_table = 'ost_faq'
 
-class FAQCategory(models.Model):
+
+class FaqCategory(models.Model):
     category_id = models.AutoField(primary_key=True)
-    category_pid = models.PositiveIntegerField(null=True, blank=True)
-    ispublic = models.BooleanField(default=False)
-    name = models.CharField(max_length=125, null=True, blank=True)
+    category_pid = models.PositiveIntegerField(blank=True, null=True)
+    ispublic = models.PositiveIntegerField()
+    name = models.CharField(max_length=125, blank=True, null=True)
     description = models.TextField()
     notes = models.TextField()
     created = models.DateTimeField()
@@ -410,460 +242,155 @@ class FAQCategory(models.Model):
         managed = False
         db_table = 'ost_faq_category'
 
-class FAQTopic(models.Model):
-    faq = models.ForeignKey(FAQ, models.CASCADE, db_column='faq_id')
-    topic = models.ForeignKey(HelpTopic, models.CASCADE, db_column='topic_id')
+
+class FaqTopic(models.Model):
+    faq_id = models.PositiveIntegerField(primary_key=True)  # The composite primary key (faq_id, topic_id) found, that is not supported. The first column is selected.
+    topic_id = models.PositiveIntegerField()
 
     class Meta:
         managed = False
         db_table = 'ost_faq_topic'
-class List(models.Model):
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255)
-    name_plural = models.CharField(max_length=255, null=True, blank=True)
-    sort_mode = models.CharField(max_length=8, choices=[('Alpha','Alpha'),('-Alpha','-Alpha'),('SortCol','SortCol')], default='Alpha')
-    masks = models.PositiveIntegerField(default=0)
-    type = models.CharField(max_length=16, null=True, blank=True)
-    configuration = models.TextField()
-    notes = models.TextField(null=True, blank=True)
-    created = models.DateTimeField()
-    updated = models.DateTimeField()
+        unique_together = (('faq_id', 'topic_id'),)
 
-    class Meta:
-        managed = False
-        db_table = 'ost_list'
-
-class ListItem(models.Model):
-    id = models.AutoField(primary_key=True)
-    list = models.ForeignKey(List, models.CASCADE, db_column='list_id', null=True)
-    status = models.PositiveIntegerField(default=1)
-    value = models.CharField(max_length=255)
-    extra = models.CharField(max_length=255, null=True, blank=True)
-    sort = models.IntegerField(default=1)
-    properties = models.TextField(null=True, blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'ost_list_items'
-class Lock(models.Model):
-    lock_id = models.AutoField(primary_key=True)
-    staff = models.ForeignKey('Staff', models.CASCADE, db_column='staff_id')
-    expire = models.DateTimeField(null=True, blank=True)
-    code = models.CharField(max_length=20, null=True, blank=True)
-    created = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_lock'
-
-class Note(models.Model):
-    id = models.AutoField(primary_key=True)
-    pid = models.PositiveIntegerField(null=True, blank=True)
-    staff = models.ForeignKey('Staff', models.CASCADE, db_column='staff_id')
-    ext_id = models.CharField(max_length=10, null=True, blank=True)
-    body = models.TextField(null=True, blank=True)
-    status = models.PositiveIntegerField(default=0)
-    sort = models.PositiveIntegerField(default=0)
-    created = models.DateTimeField()
-    updated = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_note'
-
-class CannedResponse(models.Model):
-    canned_id = models.AutoField(primary_key=True)
-    dept = models.ForeignKey('Department', models.CASCADE, db_column='dept_id')
-    isenabled = models.BooleanField(default=True)
-    title = models.CharField(max_length=255, default='')
-    response = models.TextField()
-    lang = models.CharField(max_length=16, default='en_US')
-    notes = models.TextField(null=True, blank=True)
-    created = models.DateTimeField()
-    updated = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_canned_response'
-
-class Content(models.Model):
-    id = models.AutoField(primary_key=True)
-    isactive = models.BooleanField(default=False)
-    type = models.CharField(max_length=32, default='other')
-    name = models.CharField(max_length=255)
-    body = models.TextField()
-    notes = models.TextField(null=True, blank=True)
-    created = models.DateTimeField()
-    updated = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_content'
-
-class Config(models.Model):
-    id = models.AutoField(primary_key=True)
-    namespace = models.CharField(max_length=64)
-    key = models.CharField(max_length=64)
-    value = models.TextField()
-    updated = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_config'
-class Queue(models.Model):
-    id = models.AutoField(primary_key=True)
-    parent_id = models.PositiveIntegerField(default=0)
-    columns_id = models.PositiveIntegerField(null=True, blank=True)
-    sort_id = models.PositiveIntegerField(null=True, blank=True)
-    flags = models.PositiveIntegerField(default=0)
-    staff = models.ForeignKey('Staff', models.CASCADE, db_column='staff_id')
-    sort = models.PositiveIntegerField(default=0)
-    title = models.CharField(max_length=60, null=True, blank=True)
-    config = models.TextField(null=True, blank=True)
-    filter = models.CharField(max_length=64, null=True, blank=True)
-    root = models.CharField(max_length=32, null=True, blank=True)
-    path = models.CharField(max_length=80, default='/')
-    created = models.DateTimeField()
-    updated = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_queue'
-
-class QueueColumn(models.Model):
-    id = models.AutoField(primary_key=True)
-    flags = models.PositiveIntegerField(default=0)
-    name = models.CharField(max_length=64, default='')
-    primary = models.CharField(max_length=64, default='')
-    secondary = models.CharField(max_length=64, null=True, blank=True)
-    filter = models.CharField(max_length=32, null=True, blank=True)
-    truncate = models.CharField(max_length=16, null=True, blank=True)
-    annotations = models.TextField(null=True, blank=True)
-    conditions = models.TextField(null=True, blank=True)
-    extra = models.TextField(null=True, blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'ost_queue_column'
-
-class QueueColumns(models.Model):
-    queue = models.ForeignKey(Queue, models.CASCADE, db_column='queue_id')
-    column = models.ForeignKey(QueueColumn, models.CASCADE, db_column='column_id')
-    staff = models.ForeignKey('Staff', models.CASCADE, db_column='staff_id')
-    bits = models.PositiveIntegerField(default=0)
-    sort = models.PositiveIntegerField(default=1)
-    heading = models.CharField(max_length=64, null=True, blank=True)
-    width = models.PositiveIntegerField(default=100)
-
-    class Meta:
-        managed = False
-        db_table = 'ost_queue_columns'
-
-class QueueConfig(models.Model):
-    queue = models.ForeignKey(Queue, models.CASCADE, db_column='queue_id')
-    staff = models.ForeignKey('Staff', models.CASCADE, db_column='staff_id')
-    setting = models.TextField()
-    updated = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_queue_config'
-
-class QueueExport(models.Model):
-    id = models.AutoField(primary_key=True)
-    queue = models.ForeignKey(Queue, models.CASCADE, db_column='queue_id')
-    path = models.CharField(max_length=64, default='')
-    heading = models.CharField(max_length=64, null=True, blank=True)
-    sort = models.PositiveIntegerField(default=1)
-
-    class Meta:
-        managed = False
-        db_table = 'ost_queue_export'
-
-class QueueSort(models.Model):
-    id = models.AutoField(primary_key=True)
-    root = models.CharField(max_length=32, null=True, blank=True)
-    name = models.CharField(max_length=64, default='')
-    columns = models.TextField(null=True, blank=True)
-    updated = models.DateTimeField(null=True, blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'ost_queue_sort'
-
-class QueueSorts(models.Model):
-    queue = models.ForeignKey(Queue, models.CASCADE, db_column='queue_id')
-    sort = models.ForeignKey(QueueSort, models.CASCADE, db_column='sort_id')
-    bits = models.PositiveIntegerField(default=0)
-    sort_order = models.PositiveIntegerField(default=0)
-
-    class Meta:
-        managed = False
-        db_table = 'ost_queue_sorts'
-class Organization(models.Model):
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=128, default='')
-    manager = models.CharField(max_length=16, default='')
-    status = models.PositiveIntegerField(default=0)
-    domain = models.CharField(max_length=256, default='')
-    extra = models.TextField(null=True, blank=True)
-    created = models.DateTimeField(null=True, blank=True)
-    updated = models.DateTimeField(null=True, blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'ost_organization'
-
-class OrganizationCData(models.Model):
-    org = models.OneToOneField(Organization, models.CASCADE, primary_key=True, db_column='org_id')
-    name = models.TextField(null=True, blank=True)
-    address = models.TextField(null=True, blank=True)
-    phone = models.TextField(null=True, blank=True)
-    website = models.TextField(null=True, blank=True)
-    notes = models.TextField(null=True, blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'ost_organization__cdata'
-
-class User(models.Model):
-    id = models.AutoField(primary_key=True)
-    org = models.ForeignKey(Organization, models.CASCADE, db_column='org_id')
-    default_email = models.ForeignKey('UserEmail', models.CASCADE, db_column='default_email_id')
-    status = models.PositiveIntegerField(default=0)
-    name = models.CharField(max_length=128)
-    created = models.DateTimeField()
-    updated = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_user'
-
-class UserAccount(models.Model):
-    id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, models.CASCADE, db_column='user_id')
-    status = models.PositiveIntegerField(default=0)
-    timezone = models.CharField(max_length=64, null=True, blank=True)
-    lang = models.CharField(max_length=16, null=True, blank=True)
-    username = models.CharField(max_length=64, null=True, blank=True)
-    passwd = models.CharField(max_length=128, null=True, blank=True)
-    backend = models.CharField(max_length=32, null=True, blank=True)
-    extra = models.TextField(null=True, blank=True)
-    registered = models.DateTimeField(null=True, blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'ost_user_account'
-
-class UserEmail(models.Model):
-    id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, models.CASCADE, db_column='user_id')
-    flags = models.PositiveIntegerField(default=0)
-    address = models.CharField(max_length=255)
-
-    class Meta:
-        managed = False
-        db_table = 'ost_user_email'
-
-class UserCData(models.Model):
-    user = models.OneToOneField(User, models.CASCADE, primary_key=True, db_column='user_id')
-    email = models.TextField(null=True, blank=True)
-    name = models.TextField(null=True, blank=True)
-    phone = models.TextField(null=True, blank=True)
-    notes = models.TextField(null=True, blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'ost_user__cdata'
-class Role(models.Model):
-    id = models.AutoField(primary_key=True)
-    flags = models.PositiveIntegerField(default=1)
-    name = models.CharField(max_length=64, null=True, blank=True)
-    permissions = models.TextField(null=True, blank=True)
-    notes = models.TextField(null=True, blank=True)
-    created = models.DateTimeField()
-    updated = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_role'
-
-class Staff(models.Model):
-    staff_id = models.AutoField(primary_key=True)
-    dept = models.ForeignKey('Department', models.CASCADE, db_column='dept_id')
-    role = models.ForeignKey(Role, models.CASCADE, db_column='role_id')
-    username = models.CharField(max_length=32, unique=True)
-    firstname = models.CharField(max_length=32, null=True, blank=True)
-    lastname = models.CharField(max_length=32, null=True, blank=True)
-    passwd = models.CharField(max_length=128, null=True, blank=True)
-    backend = models.CharField(max_length=32, null=True, blank=True)
-    email = models.CharField(max_length=255, null=True, blank=True)
-    phone = models.CharField(max_length=24, default='')
-    phone_ext = models.CharField(max_length=6, null=True, blank=True)
-    mobile = models.CharField(max_length=24, default='')
-    signature = models.TextField(null=True, blank=True)
-    lang = models.CharField(max_length=16, null=True, blank=True)
-    timezone = models.CharField(max_length=64, null=True, blank=True)
-    locale = models.CharField(max_length=16, null=True, blank=True)
-    notes = models.TextField(null=True, blank=True)
-    isactive = models.BooleanField(default=True)
-    isadmin = models.BooleanField(default=False)
-    isvisible = models.BooleanField(default=True)
-    onvacation = models.BooleanField(default=False)
-    assigned_only = models.BooleanField(default=False)
-    show_assigned_tickets = models.BooleanField(default=False)
-    change_passwd = models.BooleanField(default=False)
-    max_page_size = models.PositiveIntegerField(default=0)
-    auto_refresh_rate = models.PositiveIntegerField(default=0)
-    default_signature_type = models.CharField(max_length=6, choices=[('none','none'),('mine','mine'),('dept','dept')], default='none')
-    default_paper_size = models.CharField(max_length=6, choices=[('Letter','Letter'),('Legal','Legal'),('Ledger','Ledger'),('A4','A4'),('A3','A3')], default='Letter')
-    extra = models.TextField(null=True, blank=True)
-    permissions = models.TextField(null=True, blank=True)
-    created = models.DateTimeField()
-    lastlogin = models.DateTimeField(null=True, blank=True)
-    passwdreset = models.DateTimeField(null=True, blank=True)
-    updated = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_staff'
-
-class StaffDeptAccess(models.Model):
-    staff = models.ForeignKey(Staff, models.CASCADE, db_column='staff_id')
-    dept = models.ForeignKey('Department', models.CASCADE, db_column='dept_id')
-    role = models.ForeignKey(Role, models.CASCADE, db_column='role_id')
-    flags = models.PositiveIntegerField(default=1)
-
-    class Meta:
-        managed = False
-        db_table = 'ost_staff_dept_access'
-
-class Team(models.Model):
-    team_id = models.AutoField(primary_key=True)
-    lead = models.ForeignKey(Staff, models.CASCADE, db_column='lead_id')
-    flags = models.PositiveIntegerField(default=1)
-    name = models.CharField(max_length=125, default='')
-    notes = models.TextField(null=True, blank=True)
-    created = models.DateTimeField()
-    updated = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_team'
-
-class TeamMember(models.Model):
-    team = models.ForeignKey(Team, models.CASCADE, db_column='team_id')
-    staff = models.ForeignKey(Staff, models.CASCADE, db_column='staff_id')
-    flags = models.PositiveIntegerField(default=0)
-
-    class Meta:
-        managed = False
-        db_table = 'ost_team_member'
-class APIKey(models.Model):
-    id = models.AutoField(primary_key=True)
-    isactive = models.BooleanField(default=True)
-    ipaddr = models.CharField(max_length=64)
-    apikey = models.CharField(max_length=255, unique=True)
-    can_create_tickets = models.BooleanField(default=True)
-    can_exec_cron = models.BooleanField(default=True)
-    notes = models.TextField(null=True, blank=True)
-    updated = models.DateTimeField()
-    created = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_api_key'
-
-class Attachment(models.Model):
-    id = models.AutoField(primary_key=True)
-    object_id = models.PositiveIntegerField()
-    type = models.CharField(max_length=1)
-    file = models.ForeignKey('File', models.CASCADE, db_column='file_id')
-    name = models.CharField(max_length=255, null=True, blank=True)
-    inline = models.BooleanField(default=False)
-    lang = models.CharField(max_length=16, null=True, blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'ost_attachment'
-
-class Department(models.Model):
-    id = models.AutoField(primary_key=True)
-    pid = models.PositiveIntegerField(null=True, blank=True)
-    tpl_id = models.PositiveIntegerField(default=0)
-    sla = models.ForeignKey('Sla', models.CASCADE, db_column='sla_id')
-    schedule = models.ForeignKey('Schedule', models.CASCADE, db_column='schedule_id')
-    email = models.ForeignKey(Email, models.CASCADE, db_column='email_id')
-    autoresp_email = models.ForeignKey(Email, models.CASCADE, db_column='autoresp_email_id')
-    manager = models.ForeignKey(Staff, models.CASCADE, db_column='manager_id')
-    flags = models.PositiveIntegerField(default=0)
-    name = models.CharField(max_length=128, default='')
-    signature = models.TextField()
-    ispublic = models.BooleanField(default=True)
-    group_membership = models.BooleanField(default=False)
-    ticket_auto_response = models.BooleanField(default=True)
-    message_auto_response = models.BooleanField(default=False)
-    path = models.CharField(max_length=128, default='/')
-    updated = models.DateTimeField()
-    created = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'ost_department'
-
-class Draft(models.Model):
-    id = models.AutoField(primary_key=True)
-    staff = models.ForeignKey(Staff, models.CASCADE, db_column='staff_id')
-    namespace = models.CharField(max_length=32, default='')
-    body = models.TextField()
-    extra = models.TextField(null=True, blank=True)
-    created = models.DateTimeField()
-    updated = models.DateTimeField(null=True, blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'ost_draft'
-
-class Event(models.Model):
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=60)
-    description = models.CharField(max_length=60, null=True, blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'ost_event'
 
 class File(models.Model):
-    id = models.AutoField(primary_key=True)
-    ft = models.CharField(max_length=1, default='T')
-    bk = models.CharField(max_length=1, default='D')
-    type = models.CharField(max_length=255, default='')
-    size = models.PositiveBigIntegerField(default=0)
-    key = models.CharField(max_length=86)
-    signature = models.CharField(max_length=86)
-    name = models.CharField(max_length=255, default='')
-    attrs = models.CharField(max_length=255, null=True, blank=True)
+    ft = models.CharField(max_length=1)
+    bk = models.CharField(max_length=1)
+    type = models.CharField(max_length=255, db_collation='ascii_general_ci')
+    size = models.PositiveBigIntegerField()
+    key = models.CharField(max_length=86, db_collation='ascii_general_ci')
+    signature = models.CharField(max_length=86, db_collation='ascii_bin')
+    name = models.CharField(max_length=255)
+    attrs = models.CharField(max_length=255, blank=True, null=True)
     created = models.DateTimeField()
 
     class Meta:
         managed = False
         db_table = 'ost_file'
 
+
 class FileChunk(models.Model):
-    file = models.ForeignKey(File, models.CASCADE, db_column='file_id')
+    file_id = models.IntegerField(primary_key=True)  # The composite primary key (file_id, chunk_id) found, that is not supported. The first column is selected.
     chunk_id = models.IntegerField()
-    filedata = models.BinaryField()
+    filedata = models.TextField()
 
     class Meta:
         managed = False
         db_table = 'ost_file_chunk'
+        unique_together = (('file_id', 'chunk_id'),)
+
+
+class Filter(models.Model):
+    execorder = models.PositiveIntegerField()
+    isactive = models.PositiveIntegerField()
+    flags = models.PositiveIntegerField(blank=True, null=True)
+    status = models.PositiveIntegerField()
+    match_all_rules = models.PositiveIntegerField()
+    stop_onmatch = models.PositiveIntegerField()
+    target = models.CharField(max_length=5)
+    email_id = models.PositiveIntegerField()
+    name = models.CharField(max_length=32)
+    notes = models.TextField(blank=True, null=True)
+    created = models.DateTimeField()
+    updated = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_filter'
+
+
+class FilterAction(models.Model):
+    filter_id = models.PositiveIntegerField()
+    sort = models.PositiveIntegerField()
+    type = models.CharField(max_length=24)
+    configuration = models.TextField(blank=True, null=True)
+    updated = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_filter_action'
+
+
+class FilterRule(models.Model):
+    filter_id = models.PositiveIntegerField()
+    what = models.CharField(max_length=32)
+    how = models.CharField(max_length=10)
+    val = models.CharField(max_length=255)
+    isactive = models.PositiveIntegerField()
+    notes = models.TextField()
+    created = models.DateTimeField()
+    updated = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_filter_rule'
+        unique_together = (('filter_id', 'what', 'how', 'val'),)
+
+
+class Form(models.Model):
+    pid = models.PositiveIntegerField(blank=True, null=True)
+    type = models.CharField(max_length=8)
+    flags = models.PositiveIntegerField()
+    title = models.CharField(max_length=255)
+    instructions = models.CharField(max_length=512, blank=True, null=True)
+    name = models.CharField(max_length=64)
+    notes = models.TextField(blank=True, null=True)
+    created = models.DateTimeField()
+    updated = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_form'
+
+
+class FormEntry(models.Model):
+    form_id = models.PositiveIntegerField()
+    object_id = models.PositiveIntegerField(blank=True, null=True)
+    object_type = models.CharField(max_length=1)
+    sort = models.PositiveIntegerField()
+    extra = models.TextField(blank=True, null=True)
+    created = models.DateTimeField()
+    updated = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_form_entry'
+
+
+class FormEntryValues(models.Model):
+    entry_id = models.PositiveIntegerField(primary_key=True)  # The composite primary key (entry_id, field_id) found, that is not supported. The first column is selected.
+    field_id = models.PositiveIntegerField()
+    value = models.TextField(blank=True, null=True)
+    value_id = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ost_form_entry_values'
+        unique_together = (('entry_id', 'field_id'),)
+
+
+class FormField(models.Model):
+    form_id = models.PositiveIntegerField()
+    flags = models.PositiveIntegerField(blank=True, null=True)
+    type = models.CharField(max_length=255)
+    label = models.CharField(max_length=255)
+    name = models.CharField(max_length=64)
+    configuration = models.TextField(blank=True, null=True)
+    sort = models.PositiveIntegerField()
+    hint = models.CharField(max_length=512, blank=True, null=True)
+    created = models.DateTimeField()
+    updated = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_form_field'
+
 
 class Group(models.Model):
-    id = models.AutoField(primary_key=True)
-    role = models.ForeignKey(Role, models.CASCADE, db_column='role_id')
-    flags = models.PositiveIntegerField(default=1)
-    name = models.CharField(max_length=120, default='')
-    notes = models.TextField(null=True, blank=True)
+    role_id = models.PositiveIntegerField()
+    flags = models.PositiveIntegerField()
+    name = models.CharField(max_length=120)
+    notes = models.TextField(blank=True, null=True)
     created = models.DateTimeField()
     updated = models.DateTimeField()
 
@@ -871,38 +398,269 @@ class Group(models.Model):
         managed = False
         db_table = 'ost_group'
 
-class Plugin(models.Model):
-    id = models.AutoField(primary_key=True)
+
+class HelpTopic(models.Model):
+    topic_id = models.AutoField(primary_key=True)
+    topic_pid = models.PositiveIntegerField()
+    ispublic = models.PositiveIntegerField()
+    noautoresp = models.PositiveIntegerField()
+    flags = models.PositiveIntegerField(blank=True, null=True)
+    status_id = models.PositiveIntegerField()
+    priority_id = models.PositiveIntegerField()
+    dept_id = models.PositiveIntegerField()
+    staff_id = models.PositiveIntegerField()
+    team_id = models.PositiveIntegerField()
+    sla_id = models.PositiveIntegerField()
+    page_id = models.PositiveIntegerField()
+    sequence_id = models.PositiveIntegerField()
+    sort = models.PositiveIntegerField()
+    topic = models.CharField(max_length=128)
+    number_format = models.CharField(max_length=32, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    created = models.DateTimeField()
+    updated = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_help_topic'
+        unique_together = (('topic', 'topic_pid'),)
+
+
+class HelpTopicForm(models.Model):
+    topic_id = models.PositiveIntegerField()
+    form_id = models.PositiveIntegerField()
+    sort = models.PositiveIntegerField()
+    extra = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ost_help_topic_form'
+
+
+class List(models.Model):
     name = models.CharField(max_length=255)
-    install_path = models.CharField(max_length=60)
-    isphar = models.BooleanField(default=False)
-    isactive = models.BooleanField(default=False)
-    version = models.CharField(max_length=64, null=True, blank=True)
-    notes = models.TextField(null=True, blank=True)
+    name_plural = models.CharField(max_length=255, blank=True, null=True)
+    sort_mode = models.CharField(max_length=7)
+    masks = models.PositiveIntegerField()
+    type = models.CharField(max_length=16, blank=True, null=True)
+    configuration = models.TextField()
+    notes = models.TextField(blank=True, null=True)
+    created = models.DateTimeField()
+    updated = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_list'
+
+
+class ListItems(models.Model):
+    list_id = models.IntegerField(blank=True, null=True)
+    status = models.PositiveIntegerField()
+    value = models.CharField(max_length=255)
+    extra = models.CharField(max_length=255, blank=True, null=True)
+    sort = models.IntegerField()
+    properties = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ost_list_items'
+
+
+class Lock(models.Model):
+    lock_id = models.AutoField(primary_key=True)
+    staff_id = models.PositiveIntegerField()
+    expire = models.DateTimeField(blank=True, null=True)
+    code = models.CharField(max_length=20, blank=True, null=True)
+    created = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_lock'
+
+
+class Note(models.Model):
+    pid = models.PositiveIntegerField(blank=True, null=True)
+    staff_id = models.PositiveIntegerField()
+    ext_id = models.CharField(max_length=10, blank=True, null=True)
+    body = models.TextField(blank=True, null=True)
+    status = models.PositiveIntegerField()
+    sort = models.PositiveIntegerField()
+    created = models.DateTimeField()
+    updated = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_note'
+
+
+class Organization(models.Model):
+    name = models.CharField(max_length=128)
+    manager = models.CharField(max_length=16)
+    status = models.PositiveIntegerField()
+    domain = models.CharField(max_length=256)
+    extra = models.TextField(blank=True, null=True)
+    created = models.DateTimeField(blank=True, null=True)
+    updated = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ost_organization'
+
+
+class OrganizationCdata(models.Model):
+    org_id = models.PositiveIntegerField(primary_key=True)
+    name = models.TextField(blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    phone = models.TextField(blank=True, null=True)
+    website = models.TextField(blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ost_organization__cdata'
+
+
+class Plugin(models.Model):
+    name = models.CharField(max_length=255)
+    install_path = models.CharField(unique=True, max_length=60)
+    isphar = models.IntegerField()
+    isactive = models.IntegerField()
+    version = models.CharField(max_length=64, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
     installed = models.DateTimeField()
 
     class Meta:
         managed = False
         db_table = 'ost_plugin'
 
+
 class PluginInstance(models.Model):
-    id = models.AutoField(primary_key=True)
-    plugin = models.ForeignKey(Plugin, models.CASCADE, db_column='plugin_id')
-    flags = models.PositiveIntegerField(default=0)
-    name = models.CharField(max_length=255, default='')
-    notes = models.TextField(null=True, blank=True)
+    plugin_id = models.PositiveIntegerField()
+    flags = models.IntegerField()
+    name = models.CharField(max_length=255)
+    notes = models.TextField(blank=True, null=True)
     created = models.DateTimeField()
-    updated = models.DateTimeField(null=True, blank=True)
+    updated = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         managed = False
         db_table = 'ost_plugin_instance'
 
+
+class Queue(models.Model):
+    parent_id = models.PositiveIntegerField()
+    columns_id = models.PositiveIntegerField(blank=True, null=True)
+    sort_id = models.PositiveIntegerField(blank=True, null=True)
+    flags = models.PositiveIntegerField()
+    staff_id = models.PositiveIntegerField()
+    sort = models.PositiveIntegerField()
+    title = models.CharField(max_length=60, blank=True, null=True)
+    config = models.TextField(blank=True, null=True)
+    filter = models.CharField(max_length=64, blank=True, null=True)
+    root = models.CharField(max_length=32, blank=True, null=True)
+    path = models.CharField(max_length=80)
+    created = models.DateTimeField()
+    updated = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_queue'
+
+
+class QueueColumn(models.Model):
+    flags = models.PositiveIntegerField()
+    name = models.CharField(max_length=64)
+    primary = models.CharField(max_length=64)
+    secondary = models.CharField(max_length=64, blank=True, null=True)
+    filter = models.CharField(max_length=32, blank=True, null=True)
+    truncate = models.CharField(max_length=16, blank=True, null=True)
+    annotations = models.TextField(blank=True, null=True)
+    conditions = models.TextField(blank=True, null=True)
+    extra = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ost_queue_column'
+
+
+class QueueColumns(models.Model):
+    queue_id = models.PositiveIntegerField(primary_key=True)  # The composite primary key (queue_id, column_id, staff_id) found, that is not supported. The first column is selected.
+    column_id = models.PositiveIntegerField()
+    staff_id = models.PositiveIntegerField()
+    bits = models.PositiveIntegerField()
+    sort = models.PositiveIntegerField()
+    heading = models.CharField(max_length=64, blank=True, null=True)
+    width = models.PositiveIntegerField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_queue_columns'
+        unique_together = (('queue_id', 'column_id', 'staff_id'),)
+
+
+class QueueConfig(models.Model):
+    queue_id = models.PositiveIntegerField(primary_key=True)  # The composite primary key (queue_id, staff_id) found, that is not supported. The first column is selected.
+    staff_id = models.PositiveIntegerField()
+    setting = models.TextField(blank=True, null=True)
+    updated = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_queue_config'
+        unique_together = (('queue_id', 'staff_id'),)
+
+
+class QueueExport(models.Model):
+    queue_id = models.PositiveIntegerField()
+    path = models.CharField(max_length=64)
+    heading = models.CharField(max_length=64, blank=True, null=True)
+    sort = models.PositiveIntegerField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_queue_export'
+
+
+class QueueSort(models.Model):
+    root = models.CharField(max_length=32, blank=True, null=True)
+    name = models.CharField(max_length=64)
+    columns = models.TextField(blank=True, null=True)
+    updated = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ost_queue_sort'
+
+
+class QueueSorts(models.Model):
+    queue_id = models.PositiveIntegerField(primary_key=True)  # The composite primary key (queue_id, sort_id) found, that is not supported. The first column is selected.
+    sort_id = models.PositiveIntegerField()
+    bits = models.PositiveIntegerField()
+    sort = models.PositiveIntegerField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_queue_sorts'
+        unique_together = (('queue_id', 'sort_id'),)
+
+
+class Role(models.Model):
+    flags = models.PositiveIntegerField()
+    name = models.CharField(unique=True, max_length=64, blank=True, null=True)
+    permissions = models.TextField(blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    created = models.DateTimeField()
+    updated = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_role'
+
+
 class Schedule(models.Model):
-    id = models.AutoField(primary_key=True)
-    flags = models.PositiveIntegerField(default=0)
+    flags = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
-    timezone = models.CharField(max_length=64, null=True, blank=True)
+    timezone = models.CharField(max_length=64, blank=True, null=True)
     description = models.CharField(max_length=255)
     created = models.DateTimeField()
     updated = models.DateTimeField()
@@ -911,21 +669,21 @@ class Schedule(models.Model):
         managed = False
         db_table = 'ost_schedule'
 
+
 class ScheduleEntry(models.Model):
-    id = models.AutoField(primary_key=True)
-    schedule = models.ForeignKey(Schedule, models.CASCADE, db_column='schedule_id')
-    flags = models.PositiveIntegerField(default=0)
-    sort = models.PositiveSmallIntegerField(default=0)
+    schedule_id = models.PositiveIntegerField()
+    flags = models.PositiveIntegerField()
+    sort = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
-    repeats = models.CharField(max_length=16, default='never')
-    starts_on = models.DateField(null=True, blank=True)
-    starts_at = models.TimeField(null=True, blank=True)
-    ends_on = models.DateField(null=True, blank=True)
-    ends_at = models.TimeField(null=True, blank=True)
-    stops_on = models.DateTimeField(null=True, blank=True)
-    day = models.PositiveSmallIntegerField(null=True, blank=True)
-    week = models.PositiveSmallIntegerField(null=True, blank=True)
-    month = models.PositiveSmallIntegerField(null=True, blank=True)
+    repeats = models.CharField(max_length=16)
+    starts_on = models.DateField(blank=True, null=True)
+    starts_at = models.TimeField(blank=True, null=True)
+    ends_on = models.DateField(blank=True, null=True)
+    ends_at = models.TimeField(blank=True, null=True)
+    stops_on = models.DateTimeField(blank=True, null=True)
+    day = models.IntegerField(blank=True, null=True)
+    week = models.IntegerField(blank=True, null=True)
+    month = models.IntegerField(blank=True, null=True)
     created = models.DateTimeField()
     updated = models.DateTimeField()
 
@@ -933,25 +691,26 @@ class ScheduleEntry(models.Model):
         managed = False
         db_table = 'ost_schedule_entry'
 
+
 class Sequence(models.Model):
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=64, null=True, blank=True)
-    flags = models.PositiveIntegerField(null=True, blank=True)
-    next = models.PositiveBigIntegerField(default=1)
-    increment = models.IntegerField(default=1)
-    padding = models.CharField(max_length=1, default='0')
+    name = models.CharField(max_length=64, blank=True, null=True)
+    flags = models.PositiveIntegerField(blank=True, null=True)
+    next = models.PositiveBigIntegerField()
+    increment = models.IntegerField(blank=True, null=True)
+    padding = models.CharField(max_length=1, blank=True, null=True)
     updated = models.DateTimeField()
 
     class Meta:
         managed = False
         db_table = 'ost_sequence'
 
+
 class Session(models.Model):
-    session_id = models.CharField(max_length=255, primary_key=True)
-    session_data = models.BinaryField(null=True, blank=True)
-    session_expire = models.DateTimeField(null=True, blank=True)
-    session_updated = models.DateTimeField(null=True, blank=True)
-    user_id = models.CharField(max_length=16, default='0')  # osTicket staff/client ID
+    session_id = models.CharField(primary_key=True, max_length=255, db_collation='ascii_general_ci')
+    session_data = models.TextField(blank=True, null=True)
+    session_expire = models.DateTimeField(blank=True, null=True)
+    session_updated = models.DateTimeField(blank=True, null=True)
+    user_id = models.CharField(max_length=16, db_comment='osTicket staff/client ID')
     user_ip = models.CharField(max_length=64)
     user_agent = models.CharField(max_length=255)
 
@@ -959,13 +718,13 @@ class Session(models.Model):
         managed = False
         db_table = 'ost_session'
 
+
 class Sla(models.Model):
-    id = models.AutoField(primary_key=True)
-    schedule = models.ForeignKey(Schedule, models.CASCADE, db_column='schedule_id')
-    flags = models.PositiveIntegerField(default=3)
-    grace_period = models.PositiveIntegerField(default=0)
-    name = models.CharField(max_length=64, default='')
-    notes = models.TextField(null=True, blank=True)
+    schedule_id = models.PositiveIntegerField()
+    flags = models.PositiveIntegerField()
+    grace_period = models.PositiveIntegerField()
+    name = models.CharField(unique=True, max_length=64)
+    notes = models.TextField(blank=True, null=True)
     created = models.DateTimeField()
     updated = models.DateTimeField()
 
@@ -973,9 +732,63 @@ class Sla(models.Model):
         managed = False
         db_table = 'ost_sla'
 
+
+class Staff(models.Model):
+    staff_id = models.AutoField(primary_key=True)
+    dept_id = models.PositiveIntegerField()
+    role_id = models.PositiveIntegerField()
+    username = models.CharField(unique=True, max_length=32)
+    firstname = models.CharField(max_length=32, blank=True, null=True)
+    lastname = models.CharField(max_length=32, blank=True, null=True)
+    passwd = models.CharField(max_length=128, blank=True, null=True)
+    backend = models.CharField(max_length=32, blank=True, null=True)
+    email = models.CharField(max_length=255, blank=True, null=True)
+    phone = models.CharField(max_length=24)
+    phone_ext = models.CharField(max_length=6, blank=True, null=True)
+    mobile = models.CharField(max_length=24)
+    signature = models.TextField()
+    lang = models.CharField(max_length=16, blank=True, null=True)
+    timezone = models.CharField(max_length=64, blank=True, null=True)
+    locale = models.CharField(max_length=16, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    isactive = models.IntegerField()
+    isadmin = models.IntegerField()
+    isvisible = models.PositiveIntegerField()
+    onvacation = models.PositiveIntegerField()
+    assigned_only = models.PositiveIntegerField()
+    show_assigned_tickets = models.PositiveIntegerField()
+    change_passwd = models.PositiveIntegerField()
+    max_page_size = models.PositiveIntegerField()
+    auto_refresh_rate = models.PositiveIntegerField()
+    default_signature_type = models.CharField(max_length=4)
+    default_paper_size = models.CharField(max_length=6)
+    extra = models.TextField(blank=True, null=True)
+    permissions = models.TextField(blank=True, null=True)
+    created = models.DateTimeField()
+    lastlogin = models.DateTimeField(blank=True, null=True)
+    passwdreset = models.DateTimeField(blank=True, null=True)
+    updated = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_staff'
+
+
+class StaffDeptAccess(models.Model):
+    staff_id = models.PositiveIntegerField(primary_key=True)  # The composite primary key (staff_id, dept_id) found, that is not supported. The first column is selected.
+    dept_id = models.PositiveIntegerField()
+    role_id = models.PositiveIntegerField()
+    flags = models.PositiveIntegerField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_staff_dept_access'
+        unique_together = (('staff_id', 'dept_id'),)
+
+
 class Syslog(models.Model):
     log_id = models.AutoField(primary_key=True)
-    log_type = models.CharField(max_length=7, choices=[('Debug','Debug'),('Warning','Warning'),('Error','Error')])
+    log_type = models.CharField(max_length=7)
     title = models.CharField(max_length=255)
     log = models.TextField()
     logger = models.CharField(max_length=64)
@@ -987,12 +800,298 @@ class Syslog(models.Model):
         managed = False
         db_table = 'ost_syslog'
 
-class Search(models.Model):
-    object_type = models.CharField(max_length=8)
-    object_id = models.PositiveIntegerField()
-    title = models.TextField(null=True, blank=True)
-    content = models.TextField(null=True, blank=True)
+
+class Task(models.Model):
+    object_id = models.IntegerField()
+    object_type = models.CharField(max_length=1)
+    number = models.CharField(max_length=20, blank=True, null=True)
+    dept_id = models.PositiveIntegerField()
+    staff_id = models.PositiveIntegerField()
+    team_id = models.PositiveIntegerField()
+    lock_id = models.PositiveIntegerField()
+    flags = models.PositiveIntegerField()
+    duedate = models.DateTimeField(blank=True, null=True)
+    closed = models.DateTimeField(blank=True, null=True)
+    created = models.DateTimeField()
+    updated = models.DateTimeField()
 
     class Meta:
         managed = False
-        db_table = 'ost__search'
+        db_table = 'ost_task'
+
+
+class TaskCdata(models.Model):
+    task_id = models.PositiveIntegerField(primary_key=True)
+    title = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ost_task__cdata'
+
+
+class Team(models.Model):
+    team_id = models.AutoField(primary_key=True)
+    lead_id = models.PositiveIntegerField()
+    flags = models.PositiveIntegerField()
+    name = models.CharField(unique=True, max_length=125)
+    notes = models.TextField(blank=True, null=True)
+    created = models.DateTimeField()
+    updated = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_team'
+
+
+class TeamMember(models.Model):
+    team_id = models.PositiveIntegerField(primary_key=True)  # The composite primary key (team_id, staff_id) found, that is not supported. The first column is selected.
+    staff_id = models.PositiveIntegerField()
+    flags = models.PositiveIntegerField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_team_member'
+        unique_together = (('team_id', 'staff_id'),)
+
+
+class Thread(models.Model):
+    object_id = models.PositiveIntegerField()
+    object_type = models.CharField(max_length=1)
+    extra = models.TextField(blank=True, null=True)
+    lastresponse = models.DateTimeField(blank=True, null=True)
+    lastmessage = models.DateTimeField(blank=True, null=True)
+    created = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_thread'
+
+
+class ThreadCollaborator(models.Model):
+    flags = models.PositiveIntegerField()
+    thread_id = models.PositiveIntegerField()
+    user_id = models.PositiveIntegerField()
+    role = models.CharField(max_length=1)
+    created = models.DateTimeField()
+    updated = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_thread_collaborator'
+        unique_together = (('thread_id', 'user_id'),)
+
+
+class ThreadEntry(models.Model):
+    pid = models.PositiveIntegerField()
+    thread_id = models.PositiveIntegerField()
+    staff_id = models.PositiveIntegerField()
+    user_id = models.PositiveIntegerField()
+    type = models.CharField(max_length=1)
+    flags = models.PositiveIntegerField()
+    poster = models.CharField(max_length=128)
+    editor = models.PositiveIntegerField(blank=True, null=True)
+    editor_type = models.CharField(max_length=1, blank=True, null=True)
+    source = models.CharField(max_length=32)
+    title = models.CharField(max_length=255, blank=True, null=True)
+    body = models.TextField()
+    format = models.CharField(max_length=16)
+    ip_address = models.CharField(max_length=64)
+    extra = models.TextField(blank=True, null=True)
+    recipients = models.TextField(blank=True, null=True)
+    created = models.DateTimeField()
+    updated = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_thread_entry'
+
+
+class ThreadEntryEmail(models.Model):
+    thread_entry_id = models.PositiveIntegerField()
+    email_id = models.PositiveIntegerField(blank=True, null=True)
+    mid = models.CharField(max_length=255)
+    headers = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ost_thread_entry_email'
+
+
+class ThreadEntryMerge(models.Model):
+    thread_entry_id = models.PositiveIntegerField()
+    data = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ost_thread_entry_merge'
+
+
+class ThreadEvent(models.Model):
+    thread_id = models.PositiveIntegerField()
+    thread_type = models.CharField(max_length=1)
+    event_id = models.PositiveIntegerField(blank=True, null=True)
+    staff_id = models.PositiveIntegerField()
+    team_id = models.PositiveIntegerField()
+    dept_id = models.PositiveIntegerField()
+    topic_id = models.PositiveIntegerField()
+    data = models.CharField(max_length=1024, blank=True, null=True, db_comment='Encoded differences')
+    username = models.CharField(max_length=128)
+    uid = models.PositiveIntegerField(blank=True, null=True)
+    uid_type = models.CharField(max_length=1)
+    annulled = models.PositiveIntegerField()
+    timestamp = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_thread_event'
+
+
+class ThreadReferral(models.Model):
+    thread_id = models.PositiveIntegerField()
+    object_id = models.PositiveIntegerField()
+    object_type = models.CharField(max_length=1)
+    created = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_thread_referral'
+        unique_together = (('object_id', 'object_type', 'thread_id'),)
+
+
+class Ticket(models.Model):
+    ticket_id = models.AutoField(primary_key=True)
+    ticket_pid = models.PositiveIntegerField(blank=True, null=True)
+    number = models.CharField(max_length=20, blank=True, null=True)
+    user_id = models.PositiveIntegerField()
+    user_email_id = models.PositiveIntegerField()
+    status_id = models.PositiveIntegerField()
+    dept_id = models.PositiveIntegerField()
+    sla_id = models.PositiveIntegerField()
+    topic_id = models.PositiveIntegerField()
+    staff_id = models.PositiveIntegerField()
+    team_id = models.PositiveIntegerField()
+    email_id = models.PositiveIntegerField()
+    lock_id = models.PositiveIntegerField()
+    flags = models.PositiveIntegerField()
+    sort = models.PositiveIntegerField()
+    ip_address = models.CharField(max_length=64)
+    source = models.CharField(max_length=5)
+    source_extra = models.CharField(max_length=40, blank=True, null=True)
+    isoverdue = models.PositiveIntegerField()
+    isanswered = models.PositiveIntegerField()
+    duedate = models.DateTimeField(blank=True, null=True)
+    est_duedate = models.DateTimeField(blank=True, null=True)
+    reopened = models.DateTimeField(blank=True, null=True)
+    closed = models.DateTimeField(blank=True, null=True)
+    lastupdate = models.DateTimeField(blank=True, null=True)
+    created = models.DateTimeField()
+    updated = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_ticket'
+
+
+class TicketCdata(models.Model):
+    ticket_id = models.PositiveIntegerField(primary_key=True)
+    subject = models.TextField(blank=True, null=True)
+    priority = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ost_ticket__cdata'
+
+
+class TicketPriority(models.Model):
+    priority_id = models.AutoField(primary_key=True)
+    priority = models.CharField(unique=True, max_length=60)
+    priority_desc = models.CharField(max_length=30)
+    priority_color = models.CharField(max_length=7)
+    priority_urgency = models.PositiveIntegerField()
+    ispublic = models.IntegerField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_ticket_priority'
+
+
+class TicketStatus(models.Model):
+    name = models.CharField(unique=True, max_length=60)
+    state = models.CharField(max_length=16, blank=True, null=True)
+    mode = models.PositiveIntegerField()
+    flags = models.PositiveIntegerField()
+    sort = models.PositiveIntegerField()
+    properties = models.TextField()
+    created = models.DateTimeField()
+    updated = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_ticket_status'
+
+
+class Translation(models.Model):
+    object_hash = models.CharField(max_length=16, db_collation='ascii_general_ci', blank=True, null=True)
+    type = models.CharField(max_length=8, blank=True, null=True)
+    flags = models.PositiveIntegerField()
+    revision = models.PositiveIntegerField(blank=True, null=True)
+    agent_id = models.PositiveIntegerField()
+    lang = models.CharField(max_length=16)
+    text = models.TextField()
+    source_text = models.TextField(blank=True, null=True)
+    updated = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ost_translation'
+
+
+class User(models.Model):
+    org_id = models.PositiveIntegerField()
+    default_email_id = models.IntegerField()
+    status = models.PositiveIntegerField()
+    name = models.CharField(max_length=128)
+    created = models.DateTimeField()
+    updated = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'ost_user'
+
+
+class UserCdata(models.Model):
+    user_id = models.PositiveIntegerField(primary_key=True)
+    email = models.TextField(blank=True, null=True)
+    name = models.TextField(blank=True, null=True)
+    phone = models.TextField(blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ost_user__cdata'
+
+
+class UserAccount(models.Model):
+    user_id = models.PositiveIntegerField()
+    status = models.PositiveIntegerField()
+    timezone = models.CharField(max_length=64, blank=True, null=True)
+    lang = models.CharField(max_length=16, blank=True, null=True)
+    username = models.CharField(unique=True, max_length=64, blank=True, null=True)
+    passwd = models.CharField(max_length=128, db_collation='ascii_bin', blank=True, null=True)
+    backend = models.CharField(max_length=32, blank=True, null=True)
+    extra = models.TextField(blank=True, null=True)
+    registered = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ost_user_account'
+
+
+class UserEmail(models.Model):
+    user_id = models.PositiveIntegerField()
+    flags = models.PositiveIntegerField()
+    address = models.CharField(unique=True, max_length=255)
+
+    class Meta:
+        managed = False
+        db_table = 'ost_user_email'

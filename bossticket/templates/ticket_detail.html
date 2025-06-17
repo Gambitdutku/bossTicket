@@ -1,0 +1,10 @@
+<h2>{{ subject }}</h2>
+<p>Created: {{ created }}</p>
+<hr>
+<h3>Responses:</h3>
+{% for e in entries %}
+  <div style="margin-bottom:10px;">
+    <p><strong>{{ e.poster }}:</strong> {{ e.body }}</p>
+    <small>{{ e.created }}</small>
+  </div>
+{% endfor %}

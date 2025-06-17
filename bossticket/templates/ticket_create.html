@@ -1,0 +1,27 @@
+<form method="post">
+  {% csrf_token %}
+  <label>Subject: <input type="text" name="subject"></label><br>
+  <label>Message:<br><textarea name="message"></textarea></label><br>
+  <label>Help Topic:
+    <select name="help_topic">
+      {% for topic in help_topics %}
+      <option value="{{ topic.topic_id }}">{{ topic.topic }}</option>
+      {% endfor %}
+    </select>
+  </label><br>
+  <label>Priority:
+    <select name="priority">
+      {% for p in priorities %}
+      <option value="{{ p.priority_id }}">{{ p.priority }}</option>
+      {% endfor %}
+    </select>
+  </label><br>
+  <label>Department:
+    <select name="department">
+      {% for d in departments %}
+      <option value="{{ d.id }}">{{ d.name }}</option>
+      {% endfor %}
+    </select>
+  </label><br>
+  <button type="submit">Submit Ticket</button>
+</form>
