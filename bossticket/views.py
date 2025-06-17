@@ -55,21 +55,40 @@ def create_ticket(request):
     user_id = request.session.get('user_id')
     if not user_id:
         return redirect('login')
+
     if request.method == 'POST':
         subject = request.POST.get('subject')
         message = request.POST.get('message')
         help_topic_id = request.POST.get('help_topic')
         priority_id = request.POST.get('priority')
         dept_id = request.POST.get('department')
-        # create new ticket
-        ticket = Ticket(user_id=user_id,
-                        dept_id=dept_id,
-                        topic_id=help_topic_id,
-                        staff_id=0, team_id=0,
-                        source='Web',
-                        isoverdue=0, isanswered=0,
-                        sort=0, flags=0,
-                        created=timezone.now(), updated=timezone.now())
+
+        # get email id
+        try:
+            user_email = UserEmail.objects.get(user_id=user_id)
+        except UserEmail.DoesNotExist:
+            return HttpResponse("User email not found.", status=400)
+
+        ticket = Ticket(
+            user_id=user_id,
+            user_email_id=user_email.id,
+            dept_id=dept_id,
+            topic_id=help_topic_id,
+            status_id=1,
+            sla_id=1,  #
+            staff_id=0,
+            team_id=0,
+            email_id=1,
+            lock_id=0,
+            flags=0,
+            source='Web',
+            isoverdue=0,
+            isanswered=0,
+            sort=0,
+            ip_address=request.META.get('REMOTE_ADDR', ''),
+            created=timezone.now(),
+            updated=timezone.now(),
+        )
         ticket.save()
         # TicketCdata
         priority_obj = get_object_or_404(TicketPriority, pk=priority_id)
@@ -83,7 +102,7 @@ def create_ticket(request):
                             staff_id=0,
                             user_id=user_id,
                             type='M', flags=0,
-                            poster=subject,  # veya kullanıcı adı
+                            poster=subject,
                             source='Web',
                             title=subject,
                             body=message,
@@ -114,13 +133,27 @@ def ticket_detail(request, ticket_id):
         'created': ticket.created,
         'entries': entries
     })
+
+
 def ticket_list(request):
     user_id = request.session.get('user_id')
     if not user_id:
         return redirect('login')
-    tickets = Ticket.objects.filter(user_id=user_id).order_by('-created')
-    cdata = {t.ticket_id: TicketCdata.objects.get(ticket_id=t.ticket_id) for t in tickets}
-    return render(request, 'ticket_list.html', {'tickets': tickets, 'cdata': cdata})
+    tickets = Ticket.objects.filter(user_id=user_id).order_by('-created') # d'uh
+
+    # get subject with all tickets
+    ticket_data = []
+    for t in tickets:
+        cdata = TicketCdata.objects.filter(ticket_id=t.ticket_id).first()
+        ticket_data.append({
+            'ticket': t,
+            'subject': cdata.subject if cdata else '(No Subject)',
+        })
+
+    return render(request, 'ticket_list.html', {
+        'ticket_data': ticket_data
+    })
+
 
 def logout_view(request):
     request.session.flush()

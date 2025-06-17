@@ -1,0 +1,34 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}BossTicket{% endblock %}</title>
+</head>
+<body>
+    <header>
+        <h1>BossTicket</h1>
+        {% if request.session.user_id %}
+            <nav>
+                <a href="{% url 'ticket_list' %}">My Tickets</a> |
+                <a href="{% url 'create_ticket' %}">Create Ticket</a> |
+                <a href="{% url 'logout' %}">Logout</a>
+            </nav>
+        {% else %}
+            <nav>
+                <a href="{% url 'login' %}">Login</a> |
+                <a href="{% url 'register' %}">Register</a>
+            </nav>
+        {% endif %}
+        <hr>
+    </header>
+
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer>
+        <hr>
+        <small>&copy; 2025 BossTicket</small>
+    </footer>
+</body>
+</html>
